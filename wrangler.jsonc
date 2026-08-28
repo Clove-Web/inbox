@@ -23,6 +23,12 @@
 	"vars": {
 		"OIDC_SCOPE": "openid profile email",
 		"VAPID_SUBJECT": "mailto:admin@doughmination.win",
-		"COOKIE_SECURE": "true"
+		"COOKIE_SECURE": "true",
+		"OIDC_ISSUER": "https://sso.doughmination.gay",
+		"OIDC_CLIENT_ID": "cc067f21-88ca-4927-ac7b-26d21968d2e1",
+		"OIDC_REDIRECT_URI": "https://mail.doughmination.gay/auth/callback",
+		"OIDC_POST_LOGOUT_REDIRECT_URI": "https://mail.doughmination.gay",
+		"SEND_FROM": "",
+		"VAPID_PUBLIC_KEY": "BJs_bZo392RyXRrh4LNcYxJ2qIhPVaOhWqOIVbsC4HTy5IlKmdGrF4bNuFiFOWAe7udwLbCDvjVX03IChs35Lp8"
 	}
 }

@@ -96,10 +96,14 @@ function parseFolder(value: string | undefined): Folder | undefined {
   return value === "inbox" || value === "sent" || value === "drafts" ? value : undefined;
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const webhookSecret = process.env.RESEND_WEBHOOK_SECRET ?? "";
-const sendFrom = (process.env.SEND_FROM ?? "").split(/[,\n]/)[0]?.trim() ?? "";
-const cookieSecure = process.env.COOKIE_SECURE === "true";
+let resendClient: Resend | null = null;
+function resend(): Resend {
+  if (!resendClient) resendClient = new Resend(process.env.RESEND_API_KEY);
+  return resendClient;
+}
+const webhookSecret = () => process.env.RESEND_WEBHOOK_SECRET ?? "";
+const sendFrom = () => (process.env.SEND_FROM ?? "").split(/[,\n]/)[0]?.trim() ?? "";
+const cookieSecure = () => process.env.COOKIE_SECURE === "true";
 
 function computeThreadKey(subject: string, from: string, to: string[], myAddresses: string[]): string {
   const cleanSubject = (subject || "")
@@ -130,7 +134,7 @@ function pickReplyFrom(user: string, original: StoredEmail, requested?: string |
     const match = inOwned(t);
     if (match) return match;
   }
-  return owned[0] ?? sendFrom;
+  return owned[0] ?? sendFrom();
 }
 
 function buildReferences(original: { references: string | null; messageId: string | null }): string {
@@ -221,7 +225,7 @@ app.get("/auth/login", async (c) => {
     setCookie(c, "login", id, {
       httpOnly: true,
       sameSite: "Lax",
-      secure: cookieSecure,
+      secure: cookieSecure(),
       path: "/",
       maxAge: 600,
     });
@@ -252,7 +256,7 @@ app.get("/auth/callback", async (c) => {
     setCookie(c, "session", token, {
       httpOnly: true,
       sameSite: "Lax",
-      secure: cookieSecure,
+      secure: cookieSecure(),
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
     });
@@ -290,14 +294,14 @@ app.post("/webhook/inbound", async (c) => {
 
   let event: any;
   try {
-    event = resend.webhooks.verify({
+    event = resend().webhooks.verify({
       payload,
       headers: {
         id: c.req.header("svix-id") ?? "",
         timestamp: c.req.header("svix-timestamp") ?? "",
         signature: c.req.header("svix-signature") ?? "",
       },
-      webhookSecret,
+      webhookSecret: webhookSecret(),
     });
   } catch (err) {
     console.error("Webhook signature verification failed", err);
@@ -310,7 +314,7 @@ app.post("/webhook/inbound", async (c) => {
 
   const emailId = event.data.email_id;
 
-  const { data: full, error } = await resend.emails.receiving.get(emailId);
+  const { data: full, error } = await resend().emails.receiving.get(emailId);
   if (error || !full) {
     console.error("Failed to fetch received email content", error);
     return c.json({ ok: false }, 500);
@@ -440,7 +444,7 @@ app.post("/api/send", async (c) => {
   const stored = await resolveAttachments(body.attachments);
   const resendAttachments = await toResendAttachments(stored);
 
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await resend().emails.send({
     from,
     to: body.to,
     subject: body.subject,
@@ -498,7 +502,7 @@ app.post("/api/emails/:id/reply", async (c) => {
   const stored = await resolveAttachments(body.attachments);
   const resendAttachments = await toResendAttachments(stored);
 
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await resend().emails.send({
     from,
     to,
     subject,
@@ -543,7 +547,7 @@ app.post("/api/emails/:id/forward", async (c) => {
   const from = pickReplyFrom(user, original, body.from);
 
   if (original.direction === "inbound") {
-    const { data, error } = await resend.emails.receiving.forward({
+    const { data, error } = await resend().emails.receiving.forward({
       emailId: original.id,
       to: body.to,
       from,
@@ -552,7 +556,7 @@ app.post("/api/emails/:id/forward", async (c) => {
     return c.json(data);
   }
 
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await resend().emails.send({
     from,
     to: body.to,
     subject: /^\s*fwd?\s*:/i.test(original.subject) ? original.subject : `Fwd: ${original.subject}`,
@@ -638,7 +642,7 @@ app.post("/api/drafts/:id/send", async (c) => {
   const from = resolveFromFor(draft.owner, draft.from || undefined);
   const resendAttachments = await toResendAttachments(draft.attachments);
 
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await resend().emails.send({
     from,
     to: draft.to,
     subject: draft.subject,
