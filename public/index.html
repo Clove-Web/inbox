@@ -1,0 +1,102 @@
+<!-- mailbox/public/index.html
+     Copyright (c) 2026 Clove Nytrix Doughmination Twilight
+     Licensed under the DASL-1.0 Licence.
+     See LICENCE.md in the project root for full licence information. -->
+<!-- mailbox/public/index.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a0b10" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Inbox</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <h1>Inbox</h1>
+      <div class="topbar-right">
+        <button id="composeBtn" class="btn-accent">New message</button>
+        <a href="/settings" class="btn-ghost">Settings</a>
+        <button id="logoutBtn" class="btn-ghost">Log out</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav id="folderNav" class="folder-nav">
+        <button class="folder-item active" data-folder="inbox">Inbox</button>
+        <button class="folder-item" data-folder="sent">Sent</button>
+        <button class="folder-item" data-folder="drafts">Drafts</button>
+      </nav>
+
+      <aside id="list" class="list">
+        <p class="muted">Loading…</p>
+      </aside>
+
+      <main id="detail" class="detail">
+        <button id="backBtn" class="back-btn hidden">‹ Back to list</button>
+        <div id="detailContent">
+          <p class="muted">Select an email to read it.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div id="composeModal" class="modal hidden">
+    <form id="composeForm" class="compose">
+      <h2>New message</h2>
+
+      <label id="fromRow" style="display: none">
+        From
+        <select name="from"></select>
+      </label>
+
+      <label>
+        To
+        <input name="to" type="email" required />
+      </label>
+
+      <label>
+        Subject
+        <input name="subject" type="text" required />
+      </label>
+
+      <label>
+        Message
+        <textarea name="html" rows="8" required></textarea>
+      </label>
+
+      <label>
+        Attachments
+        <input name="attachments" type="file" multiple />
+      </label>
+      <ul id="attachmentList" class="attachment-list"></ul>
+      <p id="attachmentWarning" class="warn hidden"></p>
+
+      <p id="composeError" class="error hidden"></p>
+
+      <div class="actions">
+        <button type="button" id="deleteDraftBtn" class="btn-ghost hidden">Delete draft</button>
+        <button type="button" id="saveDraftBtn" class="btn-ghost">Save draft</button>
+        <button type="button" id="cancelBtn" class="btn-ghost">Cancel</button>
+        <button type="submit" class="btn-accent">Send</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="lightbox" class="lightbox hidden">
+    <img id="lightboxImg" src="" alt="" />
+  </div>
+
+  <div id="toastHost" class="toast-host"></div>
+
+  <script src="/app.js"></script>
+  <script src="/sfx.js"></script>
+</body>
+</html>

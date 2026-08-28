@@ -1,0 +1,854 @@
+/* mailbox/public/style.css
+ * Copyright (c) 2026 Clove Nytrix Doughmination Twilight
+ * Licensed under the DASL-1.0 Licence.
+ * See LICENCE.md in the project root for full licence information.
+ */
+/* mailbox/public/style.css */
+
+/* Comic Code — the shared face across every site, served from the same CDN the
+   personal + info sites use. */
+@font-face {
+  font-family: "Comic Code";
+  src: url("https://m.doughmination.gay/f/Comic-Code/woff2/ComicCode-Regular.woff2") format("woff2"),
+    url("https://m.doughmination.gay/f/Comic-Code/woff/ComicCode-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Comic Code";
+  src: url("https://m.doughmination.gay/f/Comic-Code/woff2/ComicCode-Italic.woff2") format("woff2"),
+    url("https://m.doughmination.gay/f/Comic-Code/woff/ComicCode-Italic.woff") format("woff");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Comic Code";
+  src: url("https://m.doughmination.gay/f/Comic-Code/woff2/ComicCode-Medium.woff2") format("woff2"),
+    url("https://m.doughmination.gay/f/Comic-Code/woff/ComicCode-Medium.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Comic Code";
+  src: url("https://m.doughmination.gay/f/Comic-Code/woff2/ComicCode-Bold.woff2") format("woff2"),
+    url("https://m.doughmination.gay/f/Comic-Code/woff/ComicCode-Bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Unified dark palette — derived from the info site's colours so every site
+     matches. bg #0a0b10, surface #12141c, surfaceHover #1b1e2a, text #f4f6fb,
+     muted #9aa3c2, border #232838, accent #f5a9b8. */
+  --base: #0a0b10;
+  --mantle: #12141c;
+  --crust: #05060a;
+  --surface0: #1b1e2a;
+  --surface1: #232838;
+  --surface2: #2c3346;
+  --text: #f4f6fb;
+  --subtext0: #9aa3c2;
+  --subtext1: #c9cfe0;
+  --overlay0: #5b6480;
+  --red: #d15f8c;
+  --pink: #f5a9b8; /* accent */
+  --yellow: #f5a9b8; /* warnings — kept on-palette */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--base);
+  color: var(--text);
+  font-family: "Comic Code", ui-monospace, monospace;
+  font-size: 15px;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  background: var(--mantle);
+  border-bottom: 1px solid var(--surface0);
+}
+
+.topbar h1 {
+  font-size: 1.1rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 140px 320px 1fr;
+  overflow: hidden;
+}
+
+.folder-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.75rem 0.5rem;
+  background: var(--crust);
+  border-right: 1px solid var(--surface0);
+}
+
+.folder-item {
+  background: transparent;
+  border: none;
+  color: var(--subtext1);
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.folder-item:hover {
+  background: var(--surface0);
+}
+
+.folder-item.active {
+  background: var(--surface0);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.list {
+  overflow-y: auto;
+  border-right: 1px solid var(--surface0);
+  background: var(--mantle);
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--surface0);
+  cursor: pointer;
+}
+
+.list-item:hover {
+  background: var(--surface0);
+}
+
+.list-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-delete {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--overlay0);
+  font-size: 0.9rem;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.12s ease, color 0.12s ease;
+}
+
+.list-item:hover .row-delete {
+  opacity: 1;
+}
+
+.row-delete:hover {
+  color: var(--red);
+}
+
+.list-item.active {
+  background: var(--surface0);
+  border-left: 3px solid var(--pink);
+}
+
+.list-item .from {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.list-item .subject {
+  color: var(--subtext1);
+  font-size: 0.9rem;
+  margin-top: 0.15rem;
+}
+
+.list-item .time {
+  color: var(--overlay0);
+  font-size: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.detail {
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
+}
+
+.detail h2 {
+  margin: 0 0 0.25rem 0;
+}
+
+.detail .meta {
+  color: var(--subtext0);
+  font-size: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.detail .body {
+  border-top: 1px solid var(--surface0);
+  padding-top: 1.25rem;
+  line-height: 1.6;
+}
+
+/* Email bodies often carry inline color/background/font styles from the
+   sender's mail client (signatures, quoted replies, etc). Those inline
+   styles beat our stylesheet by specificity, so on a dark theme you can
+   end up with invisible black-on-black or washed-out white-on-white text.
+   Force every element inside a message body back to the theme's palette,
+   regardless of what the original HTML tried to set. */
+.detail .body,
+.detail .body * {
+  color: var(--text) !important;
+  background-color: transparent !important;
+  font-family: inherit !important;
+  text-shadow: none !important;
+}
+
+.detail .body a {
+  color: var(--pink) !important;
+  text-decoration: underline;
+}
+
+.detail .body img {
+  max-width: 100%;
+  height: auto;
+}
+
+.muted {
+  color: var(--overlay0);
+  padding: 1rem;
+}
+
+.muted-inline {
+  color: var(--overlay0);
+  font-size: 0.85rem;
+}
+
+.message {
+  border: 1px solid var(--surface0);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.msg-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.msg-delete {
+  margin-left: auto;
+  padding: 0.2rem 0.45rem;
+  background: transparent;
+  border: none;
+  color: var(--overlay0);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.msg-delete:hover {
+  color: var(--red);
+}
+
+.dir-badge {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: var(--surface1);
+  color: var(--subtext1);
+}
+
+.dir-badge.outbound {
+  background: var(--pink);
+  color: var(--crust);
+}
+
+.thread-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+button {
+  font: inherit;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+/* Anchors used as buttons (topbar links, settings back link). */
+a.btn-accent,
+a.btn-ghost,
+a.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-accent {
+  background: var(--pink);
+  color: var(--crust);
+  font-weight: 600;
+}
+
+.btn-accent:hover {
+  filter: brightness(1.05);
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--surface2);
+  color: var(--text);
+}
+
+.btn-ghost:hover {
+  background: var(--surface0);
+}
+
+.btn-danger {
+  background: transparent;
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.btn-danger:hover {
+  background: var(--red);
+  color: var(--crust);
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 17, 27, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.compose {
+  background: var(--mantle);
+  border: 1px solid var(--surface0);
+  border-radius: 10px;
+  padding: 1.5rem;
+  width: 420px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.compose h2 {
+  margin: 0 0 0.25rem 0;
+}
+
+.compose label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--subtext1);
+}
+
+.compose input,
+.compose textarea,
+.compose select {
+  background: var(--surface0);
+  border: 1px solid var(--surface1);
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+
+.compose input:focus,
+.compose textarea:focus,
+.compose select:focus {
+  outline: 2px solid var(--pink);
+  outline-offset: 1px;
+}
+
+.compose .actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.error {
+  color: var(--red);
+  font-size: 0.85rem;
+}
+
+.error.hidden {
+  display: none;
+}
+
+.warn {
+  color: var(--yellow, #e5c890);
+  font-size: 0.85rem;
+}
+
+.warn.hidden {
+  display: none;
+}
+
+.attachment-list {
+  list-style: none;
+  margin: 0.25rem 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.attachment-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface0);
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.attachment-list a {
+  color: var(--pink);
+  text-decoration: none;
+}
+
+.attachment-list a:hover {
+  text-decoration: underline;
+}
+
+.attachment-list .remove-attachment {
+  margin-left: auto;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+/* ---------- Image attachment previews ---------- */
+.image-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.image-thumb {
+  display: block;
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--surface1);
+  background: var(--surface0);
+  cursor: zoom-in;
+}
+
+.image-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.image-thumb:hover {
+  border-color: var(--pink);
+}
+
+/* ---------- Lightbox ---------- */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 17, 27, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  cursor: zoom-out;
+  z-index: 50;
+}
+
+.lightbox.hidden {
+  display: none;
+}
+
+.lightbox img {
+  max-width: 95vw;
+  max-height: 95vh;
+  border-radius: 8px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.login-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.login-card {
+  position: static;
+}
+
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  height: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+.back-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--pink);
+  font: inherit;
+  font-weight: 600;
+  padding: 0.25rem 0;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+}
+
+/* ---------- Settings page ---------- */
+.settings-page {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.settings-card {
+  background: var(--mantle);
+  border: 1px solid var(--surface0);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+}
+
+.settings-card h2 {
+  margin: 0 0 0.35rem 0;
+  font-size: 1rem;
+}
+
+.settings-hint {
+  color: var(--subtext0);
+  font-size: 0.85rem;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.from-list {
+  list-style: none;
+  margin: 0 0 0.85rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.from-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--surface0);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+}
+
+.from-row .from-addr {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.star {
+  background: transparent;
+  border: none;
+  color: var(--overlay0);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.1rem 0.25rem;
+}
+
+.star.on {
+  color: var(--pink);
+}
+
+.from-remove {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+.add-from {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.add-from input {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface0);
+  border: 1px solid var(--surface1);
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  color: var(--text);
+  font: inherit;
+}
+
+.add-from input:focus {
+  outline: 2px solid var(--pink);
+  outline-offset: 1px;
+}
+
+.push-status {
+  font-size: 0.9rem;
+  margin-bottom: 0.85rem;
+  line-height: 1.5;
+}
+
+.push-status.ok {
+  color: var(--pink);
+}
+
+.push-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ---------- Undo toast ---------- */
+.toast-host {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--surface1);
+  color: var(--text);
+  border: 1px solid var(--surface2);
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+  font-size: 0.9rem;
+  pointer-events: auto;
+  animation: toast-in 0.16s ease;
+}
+
+.toast.leaving {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.toast-undo {
+  background: transparent;
+  border: none;
+  color: var(--pink);
+  font-weight: 600;
+  padding: 0.1rem 0.3rem;
+}
+
+.toast-undo:hover {
+  text-decoration: underline;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 768px) {
+  .topbar {
+    padding: 0.6rem 0.85rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .topbar h1 {
+    font-size: 1rem;
+  }
+
+  .topbar-right {
+    gap: 0.5rem;
+  }
+
+  .topbar-right button {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.85rem;
+  }
+
+  .layout {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .folder-nav {
+    flex: 0 0 auto;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 0.5rem;
+    gap: 0.4rem;
+    border-right: none;
+    border-bottom: 1px solid var(--surface0);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .folder-item {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .list,
+  .detail {
+    flex: 1;
+    min-height: 0;
+    border-right: none;
+    overflow-y: auto;
+  }
+
+  /* Only one of list/detail is visible at a time; .show-detail toggles which. */
+  .detail {
+    display: none;
+    padding: 1rem 1.1rem;
+  }
+
+  .layout.show-detail .list {
+    display: none;
+  }
+
+  .layout.show-detail .detail {
+    display: block;
+  }
+
+  .back-btn {
+    display: inline-block;
+  }
+
+  .msg-head {
+    font-size: 0.9rem;
+  }
+
+  .modal {
+    align-items: flex-end;
+  }
+
+  .compose {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    border-radius: 14px 14px 0 0;
+  }
+
+  .compose .actions {
+    flex-wrap: wrap;
+  }
+
+  .compose .actions button {
+    flex: 1 1 auto;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .list-item {
+    padding: 0.9rem 1rem;
+  }
+
+  /* No hover on touch — keep the row delete affordance visible. */
+  .row-delete {
+    opacity: 1;
+  }
+
+  /* iOS Safari zooms in on focus if an input's font-size is under 16px */
+  .compose input,
+  .compose textarea {
+    font-size: 16px;
+  }
+
+  button {
+    min-height: 40px;
+  }
+}

@@ -1,0 +1,87 @@
+<!-- mailbox/public/settings.html
+     Copyright (c) 2026 Clove Nytrix Doughmination Twilight
+     Licensed under the DASL-1.0 Licence.
+     See LICENCE.md in the project root for full licence information. -->
+<!-- mailbox/public/settings.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a0b10" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Settings</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <h1>Settings</h1>
+      <div class="topbar-right">
+        <a href="/inbox" class="btn-ghost">‹ Inbox</a>
+        <button id="logoutBtn" class="btn-ghost">Log out</button>
+      </div>
+    </header>
+
+    <main class="settings-page">
+      <!-- Send-from addresses (read-only; managed via reservations) -->
+      <section class="settings-card">
+        <h2>Your addresses</h2>
+        <p class="settings-hint">
+          Addresses you can send as. Everyone owns their own
+          <code>username@doughmination.win</code>; extra addresses are reserved
+          for you by an admin below.
+        </p>
+
+        <ul id="fromList" class="from-list">
+          <li class="muted">Loading…</li>
+        </ul>
+      </section>
+
+      <!-- Address reservations (admin only) -->
+      <section class="settings-card hidden" id="ownersCard">
+        <h2>Address reservations</h2>
+        <p class="settings-hint">
+          Reserve extra addresses for a user. Each user always keeps their own
+          <code>username@doughmination.win</code>. Unreserved mail goes to the
+          catch-all owner.
+        </p>
+
+        <div id="ownersList" class="from-list"><span class="muted">Loading…</span></div>
+
+        <form id="assignForm" class="add-from">
+          <input id="assignUser" type="text" placeholder="username (e.g. clove)" autocomplete="off" />
+          <input id="assignAddr" type="text" placeholder="address or local-part (e.g. ctf)" autocomplete="off" />
+          <button type="submit" class="btn-accent">Reserve</button>
+        </form>
+        <p id="ownersError" class="error hidden"></p>
+      </section>
+
+      <!-- Notifications -->
+      <section class="settings-card">
+        <h2>Push notifications</h2>
+        <p class="settings-hint">
+          Get a notification on this device when new mail arrives. On iPhone/iPad
+          you must first add this site to your Home Screen (Share → Add to Home
+          Screen), open it from there, then enable notifications.
+        </p>
+
+        <div id="pushStatus" class="push-status muted">Checking…</div>
+
+        <div class="push-actions">
+          <button id="pushToggleBtn" class="btn-accent" disabled>Enable notifications</button>
+          <button id="pushTestBtn" class="btn-ghost hidden">Send test</button>
+        </div>
+        <p id="pushError" class="error hidden"></p>
+      </section>
+    </main>
+  </div>
+
+  <script src="/settings.js"></script>
+  <script src="/sfx.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "domain": "doughmination.win",
+  "admins": ["clove"],
+  "catchAll": "clove",
+  "owners": {
+    "clove": ["admin", "ctf", "universal-credit", "clove"],
+    "ari": ["ari"]
+  }
+}
