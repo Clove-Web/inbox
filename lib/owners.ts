@@ -170,9 +170,27 @@ export async function unassignAddress(username: string, address: string): Promis
   return dashboardState();
 }
 
+/**
+ * Remove a user entirely: drop their reservations and any admin rights. Their
+ * automatic username@domain stops being owned (mail to it falls to the
+ * catch-all). The caller is responsible for their stored mail beforehand.
+ * Refuses to remove the catch-all owner, since unrouted mail would be lost.
+ */
+export async function deleteUser(username: string): Promise<OwnersState> {
+  const s = state();
+  const u = username.toLowerCase();
+  if (!u) throw new Error("No user specified");
+  if (u === s.catchAll) throw new Error("Can't delete the catch-all owner");
+  delete s.owners[u];
+  s.admins = s.admins.filter((a) => a !== u);
+  await save();
+  return dashboardState();
+}
+
 export interface OwnersUser {
   username: string;
   isAdmin: boolean;
+  isCatchAll: boolean;
   auto: string;
   reserved: string[];
   addresses: string[];
@@ -188,6 +206,7 @@ export function dashboardState(): OwnersState {
   const users = knownUsers().map((u) => ({
     username: u,
     isAdmin: s.admins.includes(u),
+    isCatchAll: u === s.catchAll,
     auto: autoAddress(u),
     reserved: (s.owners[u] ?? []).map(expand),
     addresses: addressesFor(u),

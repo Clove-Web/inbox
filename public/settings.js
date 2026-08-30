@@ -7,13 +7,23 @@
 
 const fromListEl = document.getElementById("fromList");
 
-// Admin reservations panel
+// Admin user-management panel
 const ownersCard = document.getElementById("ownersCard");
 const ownersListEl = document.getElementById("ownersList");
+const catchAllNameEl = document.getElementById("catchAllName");
 const assignForm = document.getElementById("assignForm");
 const assignUser = document.getElementById("assignUser");
 const assignAddr = document.getElementById("assignAddr");
 const ownersError = document.getElementById("ownersError");
+
+// Delete-user confirm modal
+const deleteUserModal = document.getElementById("deleteUserModal");
+const deleteUserWarning = document.getElementById("deleteUserWarning");
+const deleteUserNameEl = document.getElementById("deleteUserName");
+const deleteUserInput = document.getElementById("deleteUserInput");
+const deleteUserError = document.getElementById("deleteUserError");
+const deleteUserConfirm = document.getElementById("deleteUserConfirm");
+const deleteUserCancel = document.getElementById("deleteUserCancel");
 
 const pushStatusEl = document.getElementById("pushStatus");
 const pushToggleBtn = document.getElementById("pushToggleBtn");
@@ -55,38 +65,135 @@ async function loadSettings() {
   renderFromList(await res.json());
 }
 
-// --- Address reservations (admin only) ---
+// --- User management (admin only) ---
+
+// Which user cards are expanded, kept across re-renders.
+const expandedUsers = new Set();
+// The username the delete-confirm modal is currently armed for.
+let deleteTarget = null;
 
 function showOwnersError(msg) {
   ownersError.textContent = msg;
   ownersError.classList.remove("hidden");
 }
 
-function renderOwners(state) {
-  const users = state.users || [];
-  ownersListEl.innerHTML = users
-    .map((u) => {
-      const auto = `<span class="from-addr" title="Automatic — can't be removed">${escapeHtml(u.auto)}</span>`;
-      const extras = (u.reserved || [])
+function plural(n, word) {
+  return `${n} ${word}${n === 1 ? "" : "s"}`;
+}
+
+function summaryLine(u) {
+  const addrs = plural((u.addresses || []).length, "address");
+  const mail = plural(u.mailCount ?? 0, "message");
+  return `${addrs} · ${mail}`;
+}
+
+function userCardHtml(u, me) {
+  const isSelf = u.username === me;
+  const open = expandedUsers.has(u.username);
+
+  const badges = [
+    u.isAdmin ? '<span class="tag tag-admin">admin</span>' : "",
+    u.isCatchAll ? '<span class="tag tag-catchall">catch-all</span>' : "",
+    isSelf ? '<span class="tag tag-you">you</span>' : "",
+  ].join("");
+
+  const reservedChips = (u.reserved || []).length
+    ? (u.reserved || [])
         .map(
           (addr) => `
-            <span class="from-addr">
-              ${escapeHtml(addr)}
-              <button class="btn-ghost owner-remove" data-user="${escapeHtml(u.username)}" data-addr="${escapeHtml(addr)}">✕</button>
-            </span>`,
+          <span class="addr-chip">
+            <span class="mono">${escapeHtml(addr)}</span>
+            <button class="chip-x owner-remove" data-user="${escapeHtml(u.username)}" data-addr="${escapeHtml(addr)}" title="Remove reservation" aria-label="Remove ${escapeHtml(addr)}">✕</button>
+          </span>`,
         )
-        .join("");
-      const badge = u.isAdmin ? ' <span class="muted">(admin — sees all)</span>' : "";
-      return `
-        <div class="from-row" style="flex-direction:column;align-items:flex-start;gap:4px">
-          <strong>${escapeHtml(u.username)}${badge}</strong>
-          <div style="display:flex;flex-wrap:wrap;gap:6px">${auto}${extras}</div>
-        </div>`;
-    })
-    .join("");
+        .join("")
+    : '<span class="muted-inline">No reserved addresses.</span>';
+
+  // The catch-all owner and your own account can't be deleted.
+  const deleteBtn =
+    isSelf || u.isCatchAll
+      ? `<span class="muted-inline">${
+          isSelf ? "You can't delete your own account." : "The catch-all owner can't be deleted."
+        }</span>`
+      : `<button class="btn-danger user-delete" data-user="${escapeHtml(u.username)}">Delete user</button>`;
+
+  return `
+    <div class="user-card ${open ? "open" : ""}" data-user="${escapeHtml(u.username)}">
+      <button class="user-head" data-toggle="${escapeHtml(u.username)}" aria-expanded="${open}">
+        <span class="user-caret" aria-hidden="true">▸</span>
+        <span class="user-name mono">${escapeHtml(u.username)}</span>
+        <span class="user-badges">${badges}</span>
+        <span class="user-summary">${summaryLine(u)}</span>
+      </button>
+
+      <div class="user-body">
+        <dl class="user-info">
+          <dt>Automatic address</dt>
+          <dd><span class="mono">${escapeHtml(u.auto)}</span> <span class="muted-inline">(always owned)</span></dd>
+          <dt>Can send as</dt>
+          <dd>${(u.addresses || []).map((a) => `<span class="mono">${escapeHtml(a)}</span>`).join(", ")}</dd>
+          <dt>Stored mail</dt>
+          <dd>${plural(u.mailCount ?? 0, "message")}${u.isAdmin ? ' <span class="muted-inline">(admins also see every mailbox)</span>' : ""}</dd>
+        </dl>
+
+        <div class="user-section">
+          <h4>Reserved addresses</h4>
+          <div class="addr-chips">${reservedChips}</div>
+          <form class="reserve-inline" data-user="${escapeHtml(u.username)}">
+            <input type="text" class="reserve-addr" placeholder="address or local-part (e.g. ctf)" autocomplete="off" />
+            <button type="submit" class="btn-ghost">Reserve</button>
+          </form>
+        </div>
+
+        <div class="user-section user-danger">
+          <h4>Danger zone</h4>
+          <p class="muted-inline">
+            Deleting a user permanently removes all their stored mail and clears
+            their reservations and admin rights. They can sign in again and come
+            back as an ordinary user.
+          </p>
+          ${deleteBtn}
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderOwners(state) {
+  const users = state.users || [];
+  const me = state.me || null;
+  catchAllNameEl.textContent = state.catchAll || "—";
+
+  ownersListEl.innerHTML = users.map((u) => userCardHtml(u, me)).join("");
+
+  ownersListEl.querySelectorAll(".user-head").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const name = btn.dataset.toggle;
+      if (expandedUsers.has(name)) expandedUsers.delete(name);
+      else expandedUsers.add(name);
+      const card = btn.closest(".user-card");
+      const nowOpen = expandedUsers.has(name);
+      card.classList.toggle("open", nowOpen);
+      btn.setAttribute("aria-expanded", String(nowOpen));
+    });
+  });
 
   ownersListEl.querySelectorAll(".owner-remove").forEach((btn) => {
     btn.addEventListener("click", () => unassign(btn.dataset.user, btn.dataset.addr));
+  });
+
+  ownersListEl.querySelectorAll(".reserve-inline").forEach((form) => {
+    form.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      const addr = form.querySelector(".reserve-addr").value.trim();
+      if (addr) assign(form.dataset.user, addr);
+    });
+  });
+
+  ownersListEl.querySelectorAll(".user-delete").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const u = users.find((x) => x.username === btn.dataset.user);
+      openDeleteUser(btn.dataset.user, u ? u.mailCount ?? 0 : 0);
+    });
   });
 }
 
@@ -109,19 +216,73 @@ async function assign(username, address) {
     showOwnersError(data.error || "Couldn't reserve that address.");
     return;
   }
-  renderOwners(data);
+  // A freshly-reserved user is worth showing expanded.
+  expandedUsers.add(username.toLowerCase());
   assignUser.value = "";
   assignAddr.value = "";
+  await loadOwners();
 }
 
 async function unassign(username, address) {
+  ownersError.classList.add("hidden");
   const res = await fetch("/api/owners/unassign", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, address }),
   });
-  if (res.ok) renderOwners(await res.json());
+  if (res.ok) await loadOwners();
 }
+
+// --- Delete user ---
+
+function openDeleteUser(username, mailCount) {
+  deleteTarget = username;
+  deleteUserNameEl.textContent = username;
+  deleteUserWarning.textContent =
+    `This permanently deletes ${plural(mailCount, "stored message")} for ` +
+    `“${username}” and clears their reservations and admin rights. This can't be undone.`;
+  deleteUserError.classList.add("hidden");
+  deleteUserInput.value = "";
+  deleteUserConfirm.disabled = true;
+  deleteUserModal.classList.remove("hidden");
+  deleteUserInput.focus();
+}
+
+function closeDeleteUser() {
+  deleteTarget = null;
+  deleteUserModal.classList.add("hidden");
+}
+
+deleteUserInput.addEventListener("input", () => {
+  deleteUserConfirm.disabled =
+    deleteUserInput.value.trim().toLowerCase() !== (deleteTarget || "").toLowerCase();
+});
+
+deleteUserCancel.addEventListener("click", closeDeleteUser);
+
+deleteUserModal.addEventListener("click", (ev) => {
+  if (ev.target === deleteUserModal) closeDeleteUser();
+});
+
+deleteUserConfirm.addEventListener("click", async () => {
+  if (!deleteTarget) return;
+  deleteUserConfirm.disabled = true;
+  const res = await fetch("/api/owners/delete-user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: deleteTarget }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    deleteUserError.textContent = data.error || "Couldn't delete that user.";
+    deleteUserError.classList.remove("hidden");
+    deleteUserConfirm.disabled = false;
+    return;
+  }
+  expandedUsers.delete(deleteTarget);
+  closeDeleteUser();
+  await loadOwners();
+});
 
 assignForm.addEventListener("submit", (ev) => {
   ev.preventDefault();

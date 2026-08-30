@@ -222,3 +222,11 @@ export async function deleteByThreadKey(threadKey: string): Promise<StoredEmail[
   );
   return records.map(toEmail);
 }
+
+// Every message (inbox, sent, drafts) belonging to one mailbox user. Used by the
+// admin "delete user" flow, which wipes a user's mail before removing the user.
+export async function deleteByOwner(owner: string): Promise<StoredEmail[]> {
+  const metas = await listEmails(undefined, owner);
+  const removed = await Promise.all(metas.map((m) => deleteEmail(m.id)));
+  return removed.filter((r): r is StoredEmail => r !== null);
+}

@@ -11,6 +11,7 @@ import {
   deleteDraft,
   deleteEmail,
   deleteByThreadKey,
+  deleteByOwner,
   type Folder,
   type StoredEmail,
   type StoredAttachment,
@@ -46,6 +47,7 @@ import {
   dashboardState,
   assignAddress,
   unassignAddress,
+  deleteUser,
   initOwners,
 } from "./lib/owners";
 import { bareAddress } from "./lib/settings";
@@ -680,9 +682,21 @@ app.get("/api/settings", (c) => {
   return c.json({ fromAddresses: addrs, defaultFrom: addrs[0] ?? null });
 });
 
-app.get("/api/owners", (c) => {
+app.get("/api/owners", async (c) => {
   if (!isAdmin(c.get("user"))) return c.json({ error: "Forbidden" }, 403);
-  return c.json(dashboardState());
+  const state = dashboardState();
+  // Tally stored mail per owner in one pass so the UI can show a count and warn
+  // before a delete (one scan, not one per user).
+  const counts = new Map<string, number>();
+  for (const e of await listEmails()) {
+    const k = (e.owner || "").toLowerCase();
+    counts.set(k, (counts.get(k) ?? 0) + 1);
+  }
+  const users = state.users.map((u) => ({
+    ...u,
+    mailCount: counts.get(u.username.toLowerCase()) ?? 0,
+  }));
+  return c.json({ ...state, users, me: c.get("user").toLowerCase() });
 });
 
 app.post("/api/owners/assign", async (c) => {
@@ -705,6 +719,31 @@ app.post("/api/owners/unassign", async (c) => {
     return c.json({ error: "username and address are required" }, 400);
   }
   return c.json(await unassignAddress(String(body.username), String(body.address)));
+});
+
+// Remove a user: permanently delete all their stored mail (attachments too),
+// then drop their reservations and admin rights. They can sign in again via
+// PocketID and are recreated as an ordinary user owning just username@domain.
+app.post("/api/owners/delete-user", async (c) => {
+  const actor = c.get("user");
+  if (!isAdmin(actor)) return c.json({ error: "Forbidden" }, 403);
+
+  const body = await c.req.json().catch(() => null);
+  const username = String(body?.username ?? "").trim().toLowerCase();
+  if (!username) return c.json({ error: "username is required" }, 400);
+  if (username === actor.toLowerCase()) {
+    return c.json({ error: "You can't delete your own account." }, 400);
+  }
+
+  const removed = await deleteByOwner(username);
+  await purgeAttachmentFiles(removed);
+
+  try {
+    const state = await deleteUser(username);
+    return c.json({ ...state, deletedMail: removed.length });
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 400);
+  }
 });
 
 app.get("/api/push/status", async (c) =>

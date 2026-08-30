@@ -41,12 +41,15 @@
 }
 
 :root {
-  /* Unified dark palette — derived from the info site's colours so every site
-     matches. bg #0a0b10, surface #12141c, surfaceHover #1b1e2a, text #f4f6fb,
-     muted #9aa3c2, border #232838, accent #f5a9b8. */
+  /* Unified dark palette — the same seven core colours the personal + info
+     sites use (bg #0a0b10, surface #12141c, surfaceHover #1b1e2a, text #f4f6fb,
+     muted #9aa3c2, border #232838, accent #f5a9b8), with a few derived shades.
+     The look is deliberately "terminal": square corners, hard offset shadows,
+     2px borders, uppercase tracked headings. */
   --base: #0a0b10;
   --mantle: #12141c;
   --crust: #05060a;
+  --raised: #0e1017;
   --surface0: #1b1e2a;
   --surface1: #232838;
   --surface2: #2c3346;
@@ -56,7 +59,15 @@
   --overlay0: #5b6480;
   --red: #d15f8c;
   --pink: #f5a9b8; /* accent */
+  --accent-alt: #d15f8c; /* headings, secondary accent */
   --yellow: #f5a9b8; /* warnings — kept on-palette */
+
+  --shadow-hard: 6px 6px 0 rgba(0, 0, 0, 0.38);
+  --shadow-hard-sm: 4px 4px 0 rgba(0, 0, 0, 0.38);
+}
+
+:root {
+  color-scheme: dark;
 }
 
 * {
@@ -65,13 +76,48 @@
 
 body {
   margin: 0;
-  background: var(--base);
+  background: linear-gradient(135deg, var(--base) 0%, var(--raised) 60%, var(--crust) 100%)
+    fixed;
   color: var(--text);
   font-family: "Comic Code", ui-monospace, monospace;
   font-size: 15px;
 }
 
+/* Background watermarks — ported from the personal site's base.css.ts so the
+   mailbox shares the same atmosphere. They sit at z-index 0 behind everything;
+   the opaque chrome panels (topbar, folder nav, list, cards) cover them, so in
+   practice they show through the reading pane and the settings page. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("https://m.doughmination.gay/img/bg/estrogen.svg") center / cover no-repeat;
+  filter: invert(86%) sepia(8%) saturate(900%) hue-rotate(190deg) brightness(105%);
+  opacity: 0.05;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  width: clamp(96px, 14vw, 168px);
+  aspect-ratio: 564 / 547;
+  background: url("https://m.doughmination.gay/img/bg/miku.png") center / contain no-repeat;
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.mono {
+  font-family: "Comic Code", ui-monospace, monospace;
+}
+
 .app {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -83,13 +129,16 @@ body {
   justify-content: space-between;
   padding: 0.75rem 1.25rem;
   background: var(--mantle);
-  border-bottom: 1px solid var(--surface0);
+  border-bottom: 2px solid var(--surface1);
 }
 
 .topbar h1 {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text);
 }
 
 .topbar-right {
@@ -101,43 +150,51 @@ body {
 .layout {
   flex: 1;
   display: grid;
-  grid-template-columns: 140px 320px 1fr;
+  grid-template-columns: 150px 340px 1fr;
   overflow: hidden;
 }
 
 .folder-nav {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.75rem 0.5rem;
+  gap: 0.25rem;
+  padding: 0.85rem 0.6rem;
   background: var(--crust);
-  border-right: 1px solid var(--surface0);
+  border-right: 2px solid var(--surface1);
 }
 
 .folder-item {
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
+  border-radius: 0;
   color: var(--subtext1);
   text-align: left;
   padding: 0.5rem 0.75rem;
-  border-radius: 6px;
   font: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.8rem;
   cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
 }
 
 .folder-item:hover {
   background: var(--surface0);
+  border-color: var(--surface2);
+  transform: translateX(2px);
 }
 
 .folder-item.active {
   background: var(--surface0);
   color: var(--text);
-  font-weight: 600;
+  font-weight: 700;
+  border-color: var(--pink);
+  border-left-width: 3px;
 }
 
 .list {
   overflow-y: auto;
-  border-right: 1px solid var(--surface0);
+  border-right: 2px solid var(--surface1);
   background: var(--mantle);
 }
 
@@ -146,8 +203,10 @@ body {
   align-items: center;
   gap: 0.5rem;
   padding: 0.85rem 1rem;
-  border-bottom: 1px solid var(--surface0);
+  border-bottom: 1px solid var(--surface1);
   cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background 0.12s ease, border-color 0.12s ease;
 }
 
 .list-item:hover {
@@ -181,11 +240,11 @@ body {
 
 .list-item.active {
   background: var(--surface0);
-  border-left: 3px solid var(--pink);
+  border-left-color: var(--pink);
 }
 
 .list-item .from {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text);
 }
 
@@ -199,6 +258,8 @@ body {
   color: var(--overlay0);
   font-size: 0.75rem;
   margin-top: 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .detail {
@@ -217,7 +278,7 @@ body {
 }
 
 .detail .body {
-  border-top: 1px solid var(--surface0);
+  border-top: 2px solid var(--surface1);
   padding-top: 1.25rem;
   line-height: 1.6;
 }
@@ -257,10 +318,12 @@ body {
 }
 
 .message {
-  border: 1px solid var(--surface0);
-  border-radius: 8px;
+  border: 1px solid var(--surface2);
+  border-radius: 0;
   padding: 1rem 1.25rem;
   margin-bottom: 1rem;
+  background: var(--mantle);
+  box-shadow: var(--shadow-hard-sm);
 }
 
 .msg-head {
@@ -287,15 +350,17 @@ body {
 .dir-badge {
   font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
   padding: 0.15rem 0.45rem;
-  border-radius: 4px;
+  border-radius: 0;
+  border: 1px solid var(--surface2);
   background: var(--surface1);
   color: var(--subtext1);
 }
 
 .dir-badge.outbound {
   background: var(--pink);
+  border-color: var(--pink);
   color: var(--crust);
 }
 
@@ -307,7 +372,7 @@ body {
 
 button {
   font: inherit;
-  border-radius: 6px;
+  border-radius: 0;
   padding: 0.5rem 1rem;
   border: 1px solid transparent;
   cursor: pointer;
@@ -321,21 +386,36 @@ a.btn-danger {
   align-items: center;
   justify-content: center;
   font: inherit;
-  border-radius: 6px;
+  border-radius: 0;
   padding: 0.5rem 1rem;
   border: 1px solid transparent;
   cursor: pointer;
   text-decoration: none;
 }
 
+.btn-accent,
+.btn-ghost,
+.btn-danger,
+a.btn-accent,
+a.btn-ghost,
+a.btn-danger {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.82rem;
+  transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease,
+    color 0.12s ease, filter 0.12s ease;
+}
+
 .btn-accent {
   background: var(--pink);
   color: var(--crust);
-  font-weight: 600;
+  border-color: var(--pink);
+  font-weight: 700;
 }
 
 .btn-accent:hover {
   filter: brightness(1.05);
+  transform: translateX(2px);
 }
 
 .btn-ghost {
@@ -346,23 +426,27 @@ a.btn-danger {
 
 .btn-ghost:hover {
   background: var(--surface0);
+  border-color: var(--pink);
+  transform: translateX(2px);
 }
 
 .btn-danger {
   background: transparent;
   border-color: var(--red);
   color: var(--red);
+  font-weight: 700;
 }
 
 .btn-danger:hover {
   background: var(--red);
   color: var(--crust);
+  transform: translateX(2px);
 }
 
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(17, 17, 27, 0.7);
+  background: rgba(5, 6, 10, 0.78);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -374,25 +458,32 @@ a.btn-danger {
 
 .compose {
   background: var(--mantle);
-  border: 1px solid var(--surface0);
-  border-radius: 10px;
+  border: 2px solid var(--surface2);
+  border-radius: 0;
   padding: 1.5rem;
-  width: 420px;
+  width: 440px;
   max-width: 90vw;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  box-shadow: var(--shadow-hard);
 }
 
 .compose h2 {
   margin: 0 0 0.25rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--accent-alt);
 }
 
 .compose label {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: var(--subtext1);
 }
 
@@ -400,11 +491,13 @@ a.btn-danger {
 .compose textarea,
 .compose select {
   background: var(--surface0);
-  border: 1px solid var(--surface1);
-  border-radius: 6px;
+  border: 1px solid var(--surface2);
+  border-radius: 0;
   padding: 0.5rem 0.6rem;
   color: var(--text);
   font: inherit;
+  text-transform: none;
+  letter-spacing: normal;
   resize: vertical;
 }
 
@@ -454,7 +547,8 @@ a.btn-danger {
   align-items: center;
   gap: 0.5rem;
   background: var(--surface0);
-  border-radius: 6px;
+  border: 1px solid var(--surface2);
+  border-radius: 0;
   padding: 0.35rem 0.6rem;
   font-size: 0.85rem;
 }
@@ -486,9 +580,9 @@ a.btn-danger {
   display: block;
   width: 120px;
   height: 120px;
-  border-radius: 8px;
+  border-radius: 0;
   overflow: hidden;
-  border: 1px solid var(--surface1);
+  border: 1px solid var(--surface2);
   background: var(--surface0);
   cursor: zoom-in;
 }
@@ -508,7 +602,7 @@ a.btn-danger {
 .lightbox {
   position: fixed;
   inset: 0;
-  background: rgba(17, 17, 27, 0.9);
+  background: rgba(5, 6, 10, 0.92);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -524,8 +618,9 @@ a.btn-danger {
 .lightbox img {
   max-width: 95vw;
   max-height: 95vh;
-  border-radius: 8px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+  border-radius: 0;
+  border: 2px solid var(--surface2);
+  box-shadow: var(--shadow-hard);
 }
 
 .hidden {
@@ -543,6 +638,12 @@ a.btn-danger {
   position: static;
 }
 
+.login-card h2 {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-alt);
+}
+
 .hp-field {
   position: absolute;
   left: -9999px;
@@ -558,7 +659,9 @@ a.btn-danger {
   border: none;
   color: var(--pink);
   font: inherit;
-  font-weight: 600;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   padding: 0.25rem 0;
   margin-bottom: 0.75rem;
   cursor: pointer;
@@ -568,25 +671,30 @@ a.btn-danger {
 .settings-page {
   flex: 1;
   overflow-y: auto;
-  padding: 1.5rem;
+  padding: 1.75rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  max-width: 640px;
+  max-width: 720px;
   width: 100%;
   margin: 0 auto;
 }
 
 .settings-card {
   background: var(--mantle);
-  border: 1px solid var(--surface0);
-  border-radius: 10px;
+  border: 2px solid var(--surface2);
+  border-radius: 0;
   padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow-hard);
 }
 
 .settings-card h2 {
   margin: 0 0 0.35rem 0;
   font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--accent-alt);
 }
 
 .settings-hint {
@@ -594,6 +702,11 @@ a.btn-danger {
   font-size: 0.85rem;
   margin: 0 0 1rem 0;
   line-height: 1.5;
+}
+
+.settings-hint code,
+.settings-hint .mono {
+  color: var(--subtext1);
 }
 
 .from-list {
@@ -610,8 +723,9 @@ a.btn-danger {
   align-items: center;
   gap: 0.6rem;
   background: var(--surface0);
-  border-radius: 6px;
-  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--surface2);
+  border-radius: 0;
+  padding: 0.45rem 0.65rem;
 }
 
 .from-row .from-addr {
@@ -641,25 +755,244 @@ a.btn-danger {
   font-size: 0.8rem;
 }
 
-.add-from {
+/* ---------- Users panel (admin) ---------- */
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.user-card {
+  border: 1px solid var(--surface2);
+  background: var(--surface0);
+}
+
+.user-card.open {
+  border-color: var(--pink);
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.user-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.user-head:hover {
+  background: var(--surface1);
+}
+
+.user-caret {
+  color: var(--overlay0);
+  transition: transform 0.14s ease;
+}
+
+.user-card.open .user-caret {
+  transform: rotate(90deg);
+  color: var(--pink);
+}
+
+.user-name {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.user-badges {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.tag {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--surface2);
+  color: var(--subtext1);
+  background: var(--mantle);
+}
+
+.tag-admin {
+  border-color: var(--pink);
+  color: var(--pink);
+}
+
+.tag-catchall {
+  border-color: var(--accent-alt);
+  color: var(--accent-alt);
+}
+
+.tag-you {
+  border-color: var(--overlay0);
+  color: var(--overlay0);
+}
+
+.user-summary {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--overlay0);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.user-body {
+  display: none;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.85rem 0.9rem 1rem;
+  border-top: 1px solid var(--surface2);
+}
+
+.user-card.open .user-body {
+  display: flex;
+}
+
+.user-info {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.35rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+.user-info dt {
+  color: var(--overlay0);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.72rem;
+  padding-top: 0.1rem;
+}
+
+.user-info dd {
+  margin: 0;
+  color: var(--subtext1);
+  word-break: break-word;
+}
+
+.user-section h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--accent-alt);
+}
+
+.addr-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.addr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--mantle);
+  border: 1px solid var(--surface2);
+  padding: 0.25rem 0.2rem 0.25rem 0.5rem;
+  font-size: 0.82rem;
+}
+
+.chip-x {
+  background: transparent;
+  border: none;
+  color: var(--overlay0);
+  font-size: 0.8rem;
+  line-height: 1;
+  padding: 0.1rem 0.35rem;
+  cursor: pointer;
+}
+
+.chip-x:hover {
+  color: var(--red);
+}
+
+.reserve-inline {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.reserve-inline input {
+  flex: 1;
+  min-width: 0;
+  background: var(--mantle);
+  border: 1px solid var(--surface2);
+  border-radius: 0;
+  padding: 0.45rem 0.6rem;
+  color: var(--text);
+  font: inherit;
+}
+
+.reserve-inline input:focus {
+  outline: 2px solid var(--pink);
+  outline-offset: 1px;
+}
+
+.user-danger {
+  border-top: 1px dashed var(--surface2);
+  padding-top: 0.85rem;
+}
+
+.user-danger p {
+  margin: 0 0 0.65rem 0;
+  line-height: 1.5;
+}
+
+/* ---------- Add-user / reserve form ---------- */
+.add-user h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--accent-alt);
+}
+
+.add-from,
+.add-user-row {
   display: flex;
   gap: 0.5rem;
 }
 
-.add-from input {
+.add-from input,
+.add-user-row input {
   flex: 1;
   min-width: 0;
   background: var(--surface0);
-  border: 1px solid var(--surface1);
-  border-radius: 6px;
+  border: 1px solid var(--surface2);
+  border-radius: 0;
   padding: 0.5rem 0.6rem;
   color: var(--text);
   font: inherit;
 }
 
-.add-from input:focus {
+.add-from input:focus,
+.add-user-row input:focus {
   outline: 2px solid var(--pink);
   outline-offset: 1px;
+}
+
+/* ---------- Confirm modal ---------- */
+.confirm-card {
+  width: 460px;
+}
+
+.confirm-card label {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.85rem;
+  color: var(--subtext1);
 }
 
 .push-status {
@@ -698,9 +1031,9 @@ a.btn-danger {
   background: var(--surface1);
   color: var(--text);
   border: 1px solid var(--surface2);
-  border-radius: 8px;
+  border-radius: 0;
   padding: 0.6rem 0.9rem;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-hard-sm);
   font-size: 0.9rem;
   pointer-events: auto;
   animation: toast-in 0.16s ease;
@@ -715,7 +1048,9 @@ a.btn-danger {
   background: transparent;
   border: none;
   color: var(--pink);
-  font-weight: 600;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   padding: 0.1rem 0.3rem;
 }
 
@@ -769,7 +1104,7 @@ a.btn-danger {
     padding: 0.5rem;
     gap: 0.4rem;
     border-right: none;
-    border-bottom: 1px solid var(--surface0);
+    border-bottom: 2px solid var(--surface1);
     -webkit-overflow-scrolling: touch;
   }
 
@@ -817,7 +1152,10 @@ a.btn-danger {
     max-width: 100%;
     max-height: 92vh;
     overflow-y: auto;
-    border-radius: 14px 14px 0 0;
+  }
+
+  .confirm-card {
+    width: 100%;
   }
 
   .compose .actions {
@@ -844,8 +1182,24 @@ a.btn-danger {
 
   /* iOS Safari zooms in on focus if an input's font-size is under 16px */
   .compose input,
-  .compose textarea {
+  .compose textarea,
+  .reserve-inline input,
+  .add-user-row input,
+  .add-from input {
     font-size: 16px;
+  }
+
+  .user-summary {
+    display: none;
+  }
+
+  .user-info {
+    grid-template-columns: 1fr;
+    gap: 0.15rem 0;
+  }
+
+  .user-info dd {
+    margin-bottom: 0.4rem;
   }
 
   button {

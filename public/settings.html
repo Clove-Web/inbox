@@ -42,21 +42,25 @@
         </ul>
       </section>
 
-      <!-- Address reservations (admin only) -->
+      <!-- User management (admin only) -->
       <section class="settings-card hidden" id="ownersCard">
-        <h2>Address reservations</h2>
+        <h2>Users</h2>
         <p class="settings-hint">
-          Reserve extra addresses for a user. Each user always keeps their own
-          <code>username@doughmination.win</code>. Unreserved mail goes to the
-          catch-all owner.
+          One card per user. Expand a card to see their info, reserve or remove
+          extra addresses, or delete the account. Everyone always keeps their own
+          <code>username@doughmination.win</code>; unreserved mail goes to the
+          catch-all owner (<span id="catchAllName" class="mono">…</span>).
         </p>
 
-        <div id="ownersList" class="from-list"><span class="muted">Loading…</span></div>
+        <div id="ownersList" class="user-list"><span class="muted">Loading…</span></div>
 
-        <form id="assignForm" class="add-from">
-          <input id="assignUser" type="text" placeholder="username (e.g. clove)" autocomplete="off" />
-          <input id="assignAddr" type="text" placeholder="address or local-part (e.g. ctf)" autocomplete="off" />
-          <button type="submit" class="btn-accent">Reserve</button>
+        <form id="assignForm" class="add-user">
+          <h3>Reserve an address</h3>
+          <div class="add-user-row">
+            <input id="assignUser" type="text" placeholder="username (e.g. clove)" autocomplete="off" />
+            <input id="assignAddr" type="text" placeholder="address or local-part (e.g. ctf)" autocomplete="off" />
+            <button type="submit" class="btn-accent">Reserve</button>
+          </div>
         </form>
         <p id="ownersError" class="error hidden"></p>
       </section>
@@ -79,6 +83,22 @@
         <p id="pushError" class="error hidden"></p>
       </section>
     </main>
+  </div>
+
+  <div id="deleteUserModal" class="modal hidden">
+    <div class="compose confirm-card">
+      <h2>Delete user</h2>
+      <p class="settings-hint" id="deleteUserWarning"></p>
+      <label>
+        Type <span class="mono" id="deleteUserName">username</span> to confirm
+        <input id="deleteUserInput" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" />
+      </label>
+      <p id="deleteUserError" class="error hidden"></p>
+      <div class="actions">
+        <button type="button" id="deleteUserCancel" class="btn-ghost">Cancel</button>
+        <button type="button" id="deleteUserConfirm" class="btn-danger" disabled>Delete user</button>
+      </div>
+    </div>
   </div>
 
   <script src="/settings.js"></script>
