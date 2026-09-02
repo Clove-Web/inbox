@@ -1,0 +1,72 @@
+# go to my backup
+name: Codeberg
+
+on:
+  push:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    concurrency:
+      group: mirror-${{ github.repository }}
+      cancel-in-progress: false
+
+    env:
+      CODEBERG_HOST: codeberg.org
+      CODEBERG_USERNAME: ${{ secrets.CODEBERG_USERNAME }}
+      CODEBERG_REPO: ${{ secrets.CODEBERG_REPO }}
+      CODEBERG_TOKEN: ${{ secrets.CODEBERG_TOKEN }}
+
+    steps:
+      - name: Clone every ref
+        env:
+          SOURCE_TOKEN: ${{ github.token }}
+          SERVER_URL: ${{ github.server_url }}
+        run: |
+          set -euo pipefail
+
+          sourceHost="${SERVER_URL#https://}"
+
+          git clone --mirror \
+            "https://x-access-token:${SOURCE_TOKEN}@${sourceHost}/${GITHUB_REPOSITORY}.git" \
+            source.git
+
+      - name: Drop pull-request refs
+        working-directory: source.git
+        run: |
+          set -euo pipefail
+
+          git for-each-ref --format='%(refname)' 'refs/pull/*' \
+            | while read -r ref; do
+                git update-ref -d "$ref"
+              done
+
+      - name: Push mirror
+        working-directory: source.git
+        run: |
+          set -euo pipefail
+
+          if [ -z "$CODEBERG_USERNAME" ]; then
+            echo "CODEBERG_USERNAME is not set" >&2
+            exit 1
+          fi
+
+          if [ -z "$CODEBERG_REPO" ]; then
+            echo "CODEBERG_REPO is not set" >&2
+            exit 1
+          fi
+
+          targetUrl="https://${CODEBERG_HOST}/${CODEBERG_USERNAME}/${CODEBERG_REPO}.git"
+
+          echo "Mirroring ${GITHUB_REPOSITORY} -> ${targetUrl}"
+
+          git remote add mirror "$targetUrl"
+
+          # Credentials go through a helper so the token never lands in .git/config
+          git -c credential.helper= \
+              -c "credential.helper=!f() { echo username=\"\$CODEBERG_USERNAME\"; echo password=\"\$CODEBERG_TOKEN\"; }; f" \
+              push --mirror mirror
